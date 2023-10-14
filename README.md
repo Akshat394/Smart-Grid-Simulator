@@ -1,5 +1,5 @@
 # Smart Grid Monitoring System.
-
+The Smart-Grid-Monitoring-System repository is a comprehensive and innovative solution for the development and implementation of state-of-the-art smart grid monitoring systems. 
 ## 📜 Slave Code Overview:
 
 ### 🌐 Port and Pin Definitions:
