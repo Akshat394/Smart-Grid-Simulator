@@ -1,5 +1,103 @@
-# Smart Grid Monitoring System.
-The Smart-Grid-Monitoring-System repository is a comprehensive and innovative solution for the development and implementation of state-of-the-art smart grid monitoring systems. 
+# 🏭 Smart Grid Monitoring System
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Hardware](https://img.shields.io/badge/Hardware-8051-blue)](https://en.wikipedia.org/wiki/Intel_8051)
+[![Language](https://img.shields.io/badge/Language-C-orange)](https://en.wikipedia.org/wiki/C_(programming_language))
+
+A comprehensive and innovative solution for monitoring and controlling smart grid systems using 8051 microcontrollers. This system implements a master-slave architecture for real-time monitoring of voltage, pressure, and temperature parameters in a smart grid environment.
+
+## 🌟 Features
+
+- **Real-time Monitoring**: Continuous monitoring of critical grid parameters
+- **Master-Slave Architecture**: Efficient distributed control system
+- **Multi-sensor Integration**: Support for voltage, pressure, and temperature sensors
+- **LCD Display Interface**: Real-time parameter visualization
+- **UART Communication**: Reliable data transmission between master and slave
+- **Stepper Motor Control**: Automated control based on pressure conditions
+- **Keypad Interface**: User-friendly control interface
+- **Street Light Control**: Integrated street light management system
+
+## 🛠️ Hardware Requirements
+
+- 8051 Microcontroller (Master and Slave)
+- ADC808 for analog signal conversion
+- LCD Display
+- Keypad
+- Stepper Motor
+- Various Sensors (Voltage, Pressure, Temperature)
+- Street Light Control Circuit
+- UART Communication Module
+
+## 📋 System Architecture
+
+### Master Controller
+- Manages the overall system control
+- Interfaces with LCD display and keypad
+- Processes sensor data from slave
+- Controls street lights
+- Handles user input and system status display
+
+### Slave Controller
+- Interfaces with multiple sensors
+- Performs ADC conversions
+- Controls stepper motor
+- Communicates with master via UART
+- Implements real-time monitoring algorithms
+
+## 💻 Code Structure
+
+### Master Code (`CODE FOR MASTER.c`)
+- LCD interface functions
+- Keypad handling
+- UART communication
+- Street light control
+- System initialization
+- Main control loop
+
+### Slave Code (`CODE FOR SLAVE.c`)
+- ADC interface functions
+- Sensor reading routines
+- Stepper motor control
+- UART communication
+- Data processing algorithms
+
+## 🔧 Setup and Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Akshat394/Smart-Grid-Simulator.git
+   ```
+
+2. Load the hex files:
+   - `master.hex` to the master microcontroller
+   - `slave.hex` to the slave microcontroller
+
+3. Connect the hardware components as per the circuit diagram (`Circuit_image.PNG`)
+
+4. Power up the system and initialize
+
+## 📊 Circuit Diagram
+
+The system's circuit diagram is available in the repository as `Circuit_image.PNG`. Refer to it for proper hardware connections and setup.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 👥 Authors
+
+- Original Author: Azaz Hassan Khan
+- Maintainer: Akshat394
+
+## 🙏 Acknowledgments
+
+- Thanks to all contributors who have helped in developing and improving this system
+- Special thanks to the open-source community for their valuable resources and support
+
 ## 📜 Slave Code Overview:
 
 ### 🌐 Port and Pin Definitions:
