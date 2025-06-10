@@ -88,16 +88,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 👥 Authors
-
-- Original Author: Azaz Hassan Khan
-- Maintainer: Akshat394
-
-## 🙏 Acknowledgments
-
-- Thanks to all contributors who have helped in developing and improving this system
-- Special thanks to the open-source community for their valuable resources and support
-
 ## 📜 Slave Code Overview:
 
 ### 🌐 Port and Pin Definitions:
