@@ -1,21 +1,17 @@
+#ifdef __C51__
 #include <reg51.h>
-	//PORT FOR LCD
+#else
+// Minimal stubs for non-embedded environments
+unsigned char P1, P2, P3;
+unsigned char SBUF, TI, RI, TR0, TF0, TMOD, TH1, SCON, TR1, TL0, TH0;
+unsigned char rs, e, col1, col2, col3, row1, row2, row3, row4, LAMP;
 #define lcd P1
+#endif
 //PIN FOR LCD            
 //PIN FOR REGISTER
-sbit rs = P2 ^ 0;
 //PIN FOR ENABLE
-sbit e = P2 ^ 1;
 //PIN FOR KEYPAD
-sbit col1 = P2 ^ 3;
-sbit col2 = P2 ^ 7;
-sbit col3 = P3 ^ 3;
-sbit row1 = P2 ^ 2;
-sbit row2 = P2 ^ 4;
-sbit row3 = P2 ^ 5;
-sbit row4 = P2 ^ 6;
 //PIN FOR STREET LIGHTS
-sbit LAMP = P3 ^ 2;
 //PROGRAM FUNCTIONS PROTOTYPING
 void delay(int);
 void cmd(char);
@@ -31,7 +27,6 @@ void TimerDelay()	//Generating 65535 * 1.085us=71.1ms delay
 	while (TF0 == 0);
 	TR0 = 0;
 	TF0 = 0;
-
 }
 
 void delay(int d)	//DELAY
