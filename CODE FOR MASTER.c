@@ -110,58 +110,68 @@ void init(void)	//LCD INITIALIZATION
 	cmd(0x01);	// beginning of first line
 }
 
-void sensor1()	//ACCEPTING DATA OF CHANNEL 1 FROM SLAVE FUNCTION
-{
-	unsigned char a;
-	string("VOLTAGE     ");
-	cmd(0xc0);
-
-	while (RI == 0);	//RECIVING DATA FROM SLAVE AND STORING IN SBUF
-	a = SBUF;
-	RI = 0;
-	display(a);	//DISPLAYING SBUF DATA ON LCD
-	string(" V  ");
-	cmd(0x80);
+// Helper function to receive a byte with checksum over UART
+unsigned char receive_with_checksum() {
+    unsigned char data, checksum;
+    while (RI == 0); // Wait for data
+    data = SBUF;
+    RI = 0;
+    while (RI == 0); // Wait for checksum
+    checksum = SBUF;
+    RI = 0;
+    if ((data ^ 0xAA) == checksum) {
+        return data;
+    } else {
+        // Checksum error, return 0xFF as error code
+        return 0xFF;
+    }
 }
 
-void sensor2()	//ACCEPTING DATA OF CHANNEL 2 FROM SLAVE FUNCTION
-{
-	unsigned char a, b;
-
-	string("PRESSURE     ");
-	cmd(0xc0);
-	while (RI == 0);	//RECEIVING TENTH DATA
-	a = SBUF;
-	RI = 0;
-	while (RI == 0);	//RECEIVING TENTH DATA
-	b = SBUF;
-	RI = 0;
-
-	display(a);
-	display(b);	//DISPLAYING TENTH DATA
-	//DISPLAYING UNITE DATA
-	string("KP");
-
-	cmd(0x80);
-
+// Update sensor1, sensor2, sensor3 to use receive_with_checksum
+void sensor1() {
+    unsigned char a;
+    string("VOLTAGE     ");
+    cmd(0xc0);
+    a = receive_with_checksum();
+    if (a != 0xFF) {
+        display(a);
+        string(" V  ");
+    } else {
+        string("ERR");
+    }
+    cmd(0x80);
 }
 
-void sensor3()	//ACCEPTING DATA OF CHANNEL 2 FROM SLAVE FUNCTION
-{
-	unsigned char a, b;
-	string("TEMPERATURE   ");
-	cmd(0xc0);
-	while (RI == 0);	//RECEIVING TENTH DATA
-	a = SBUF;
-	RI = 0;
-	while (RI == 0);	//RECEIVING TENTH DATA
-	b = SBUF;
-	RI = 0;
-	display(a);
-	display(b);	//DISPLAYING TENTH DATA
-	//DISPLAYING UNITE DATA
-	string("C  ");
-	cmd(0x80);
+void sensor2() {
+    unsigned char a, b;
+    string("PRESSURE     ");
+    cmd(0xc0);
+    a = receive_with_checksum();
+    b = receive_with_checksum();
+    if (a != 0xFF && b != 0xFF) {
+        display(a);
+        display(b);
+        string("KP");
+    } else {
+        string("ERR");
+    }
+    cmd(0x80);
+}
+
+void sensor3() {
+    unsigned char a, b;
+    string("TEMPERATURE   ");
+    cmd(0xc0);
+    a = receive_with_checksum();
+    b = receive_with_checksum();
+    if (a != 0xFF && b != 0xFF) {
+        display(a);
+        display(b);
+        string("C  ");
+    } else {
+        string("ERR");
+    }
+    cmd(0x80);
 }
 
 unsigned char keypad()	//KEYPAD FUNCTION

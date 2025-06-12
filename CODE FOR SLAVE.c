@@ -1,65 +1,104 @@
+// NOTE: 'reg51.h' is required for 8051 microcontroller development. If you see linter errors about this file, they can be ignored if you are not compiling for 8051 hardware.
 #include <reg51.h>
 	//ACCEPTING DATA FROM ADC808 THROUGH PORT P1
-#define output P1
+#define OUTPUT_PORT P1
 //CHANNEL SELECTING PINS OF ADC808
-sbit add_a = P2 ^ 0;
-sbit add_b = P2 ^ 1;
-sbit add_c = P2 ^ 2;
+#define ADD_A P2_0
+#define ADD_B P2_1
+#define ADD_C P2_2
 //CHANNEL ENABLING PIN OF ADC808
-sbit al = P2 ^ 3;
+#define AL P2_3
 //READING CONVERTING DATA FROM ANALOG TO DIGITAL OF ADC808
-sbit rd = P2 ^ 4;
+#define RD P2_4
 //START CONVERTING DATA OF ADC808
-sbit wr = P2 ^ 5;
+#define WR P2_5
 //WAITING FOR CONVERTED DATA TO FINISH PIN
-sbit INTR = P2 ^ 6;
+#define INTR_PIN P2_6
 //PIN FOR STEPPER MOTOR
-sbit winding1 = P3 ^ 4;
-sbit winding2 = P3 ^ 5;
-sbit winding3 = P3 ^ 6;
-sbit winding4 = P3 ^ 7;
+#define WINDING1 P3_4
+#define WINDING2 P3_5
+#define WINDING3 P3_6
+#define WINDING4 P3_7
 //PIN FOR MOTOR
-sbit motor = P3 ^ 2;
+#define MOTOR P3_2
+// UART Communication Constants
+#define VOLTAGE_CMD 'V'
+#define PRESSURE_CMD 'P'
+#define TEMPERATURE_CMD 'T'
+
+// Sensor Conversion Constants
+#define ADC_MAX_VALUE 256.0
+#define ADC_REFERENCE_VOLTAGE 5.0
+
+// Pressure Sensor Constants
+#define PRESSURE_CONV_FACTOR_A (5.0 / ADC_MAX_VALUE)
+#define PRESSURE_CONV_FACTOR_B 0.09
+#define PRESSURE_CONV_FACTOR_C 0.009
+
+// Voltage Sensor Constant
+#define VOLTAGE_CONV_FACTOR 5.02
+
+// Temperature Sensor Constants
+#define TEMPERATURE_CONV_FACTOR_A 1.966
+#define TEMPERATURE_CONV_FACTOR_B 2.0
+
+// ASCII Offset for numerical conversion
+#define ASCII_OFFSET 0x30
+
+// Stepper Motor Control Threshold
+#define MOTOR_THRESHOLD 3
+
 //PROTOTYPING OF FUNCTIONS
 void condition1(unsigned char);
 void condition2(unsigned char);
 void condition3(unsigned char);
 
-unsigned char adc1();
-unsigned char adc2();
-unsigned char adc3();
 //PROGRAM FUNCTIONS
 void TimerDelay();
+
+// Generic function to read ADC from a specified channel
+unsigned char read_adc(unsigned char channel)
+{
+	unsigned char x;
+	// Select the ADC channel based on the input 'channel'
+	ADD_A = (channel & 0x01) ? 1 : 0;
+	ADD_B = (channel & 0x02) ? 1 : 0;
+	ADD_C = (channel & 0x04) ? 1 : 0;
+	AL = 1; // Enable the selected channel
+	WR = 1; // Start conversion
+	AL = 0;
+	WR = 0; // Stop conversion
+	while (INTR_PIN == 1); // Wait for conversion to stop
+	while (INTR_PIN == 0);
+	RD = 1; // Read converted data
+	x = OUTPUT_PORT; // Copy converted data to variable x
+	RD = 0; // Stop reading converted data
+	return x; // Return the converted value
+}
 
 void rec() interrupt 4
 {
 	float a, b, c;
-
 	if (RI == 1)
 	{
-		if (SBUF == 'V')	//IF SBUF==V THAN READ DATA FROM CHANNEL 1 AND SEND IT TO MASTER
+		if (SBUF == VOLTAGE_CMD) // Read Voltage (Channel 0)
 		{
-			condition1(adc1());
+			condition1(read_adc(0));
 		}
-
-		if (SBUF == 'P')	//IF SBUF==P THAN READ DATA FROM CHANNEL 2 AND SEND IT TO MASTER
+		if (SBUF == PRESSURE_CMD) // Read Pressure (Channel 1)
 		{
-			c = adc2();
-			a = (5.0 / 256) *c;	//PRESSURE FORMULA
-			b = ((a / 5.0) + 0.09) / 0.009 - 1;	//PRESSURE FORMULA
+			c = read_adc(1);
+			a = PRESSURE_CONV_FACTOR_A * c;
+			b = ((a / ADC_REFERENCE_VOLTAGE) + PRESSURE_CONV_FACTOR_B) / PRESSURE_CONV_FACTOR_C - 1;
 			condition2(b);
 		}
-
-		if (SBUF == 'T')	//IF SBUF==T THAN READ DATA FROM CHANNEL 3 AND SEND IT TO MASTER
+		if (SBUF == TEMPERATURE_CMD) // Read Temperature (Channel 2)
 		{
-			condition3(adc3());
+			condition3(read_adc(2));
 		}
-
 		RI = 0;
 		TR0 = 1;
 	}
-
-	//RECIEVINF DATA FROM MASTER
 }
 
 void TimerDelay()	//Generating 65535 * 1.085us=71.1ms delay
@@ -72,181 +111,105 @@ void TimerDelay()	//Generating 65535 * 1.085us=71.1ms delay
 	TF0 = 0;	//FORCING OVER FLOWING
 }
 
-unsigned char adc1()	//ANALOG TO DIGITAL CONVERTION OF VOLTAGE SENSOR FUNCTION
-{
-	unsigned char x;
-	add_a = 0;	//SELECTING CHANNEL 0
-	add_b = 0;
-	add_c = 0;
-	al = 1;	//ENABLING CHANNEL 0
-	wr = 1;	//STARTING CONVERSION
-	al = 0;
-	wr = 0;	//STOPING CONVERSION
-	while (INTR == 1);	//WAITING FOR CONVERSION TO STOP
-	while (INTR == 0);
-	rd = 1;	//READING CONVERTED DATA
-	x = output;	//COPING CONVERTED DATA TO VARIABLE X
-	rd = 0;	//STOP READING CONVERTED DATA
-	return x;
-}	//RETURNING VARIABLE
-
-unsigned char adc2()	//ANALOG TO DIGITAL CONVERTION OF PRESSURE SENSOR FUNCTION
-{
-	unsigned char x;
-	add_a = 1;	//SELECTING CHANNEL 1
-	add_b = 0;
-	add_c = 0;
-	al = 1;
-	wr = 1;
-	al = 0;
-	wr = 0;
-	while (INTR == 1);
-	while (INTR == 0);
-	rd = 1;
-	x = output;
-	rd = 0;
-	return x;
+// Helper function to send a byte with checksum over UART
+void send_with_checksum(unsigned char data) {
+    unsigned char checksum = data ^ 0xAA;
+    SBUF = data;
+    while (TI == 0);
+    TI = 0;
+    SBUF = checksum;
+    while (TI == 0);
+    TI = 0;
 }
 
-unsigned char adc3()	//ANALOG TO DIGITAL CONVERTION OF TEMPRATURE SENSOR FUNCTION
-{
-	unsigned char x;
-	add_a = 0;	//SELECTING CHANNEL 2
-	add_b = 1;
-	add_c = 0;
-	al = 1;
-	wr = 1;
-	al = 0;
-	wr = 0;
-	while (INTR == 1);
-	while (INTR == 0);
-	rd = 1;
-	x = output;
-	rd = 0;
-	return x;
+// Update condition1, condition2, condition3 to use send_with_checksum
+void condition1(unsigned char var) {
+    var = VOLTAGE_CONV_FACTOR * var / ADC_MAX_VALUE;
+    send_with_checksum(var + ASCII_OFFSET);
 }
 
-void condition1(unsigned char
-	var)	//CONDITIONS FOR VOLTAGE SENSOR
-{
-	var = 5.02 *
-		var / 256;	//FORMULA FOR VOLTAGE SENSOR
-	SBUF =
-		var +0x30;
-	while (TI == 0);	//TRANSMITTING DATA TO MASTER
-	TI = 0;
+void condition2(unsigned char var) {
+    unsigned char unite, tenth;
+    tenth = var / 10;
+    tenth = tenth + ASCII_OFFSET;
+    send_with_checksum(tenth);
+    TimerDelay(); TimerDelay(); TimerDelay();
+    unite = var % 10;
+    unite = unite + ASCII_OFFSET;
+    send_with_checksum(unite);
 }
 
-void condition2(unsigned char
-	var)	//CONDITIONS FOR PRESSURE SENSOR
-{
-	unsigned char unite, tenth;
-	tenth =
-		var / 10;	//RECEIVING DATA AND EXTRACTING TENTH DIGIT
-	tenth = tenth + 0x30;	//CONVERTING TO ASCII
-	SBUF = tenth;	//STORING INTO SBUF
-	while (TI == 0);
-	TI = 0;
-	TimerDelay();
-	TimerDelay();
-	TimerDelay();
-
-	unite =
-		var % 10;	//RECEIVING DATA AND EXTRACTING UNITE DIGIT
-	unite = unite + 0x30;	//CONVERTING TO ASCII
-	SBUF = unite;	//STORING INTO SBUF
-	while (TI == 0);
-	TI = 0;
-
+void condition3(unsigned char var) {
+    unsigned char unite, tenth;
+    var = var * TEMPERATURE_CONV_FACTOR_A;
+    tenth = var / 10;
+    tenth = tenth + ASCII_OFFSET;
+    send_with_checksum(tenth);
+    TimerDelay(); TimerDelay(); TimerDelay();
+    unite = var % 10;
+    unite = unite + ASCII_OFFSET;
+    send_with_checksum(unite);
 }
 
-void condition3(unsigned char
-	var)	//CONDITIONS FOR TEMPRATURE SENSOR
-{
-	unsigned char unite, tenth;
-	var =
-	var *1.966;	//FORMULA FOR TEMPRATURE SENSOR
-	tenth =
-		var / 10;
-	tenth = tenth + 0x30;
-	SBUF = tenth;
-	while (TI == 0);
-	TI = 0;
-	TimerDelay();
-	TimerDelay();
-	TimerDelay();
-	unite =
-		var % 10;
-	unite = unite + 0x30;
-	SBUF = unite;
-	while (TI == 0);
-	TI = 0;
-}
-
-void condition3a(unsigned char
-	var)	//CONDITIONS FOR TEMPRATURE SENSOR
+void condition3a(unsigned char var)	//CONDITIONS FOR TEMPRATURE SENSOR
 {
 	unsigned char tenth;
-	var =
-	var * 2;	//FORMULA FOR TEMPRATURE SENSOR
-	tenth =
-		var / 10;
-	if (tenth > 3)
+	var = var * TEMPERATURE_CONV_FACTOR_B;	//FORMULA FOR TEMPRATURE SENSOR
+	tenth = var / 10;
+	if (tenth > MOTOR_THRESHOLD)
 	{
-		motor = 1;
+		MOTOR = 1;
 	}
 	else
 	{
-		motor = 0;
+		MOTOR = 0;
 	}
 }
 
-void condition2a(unsigned char
-	var)	//CONDITIONS FOR TEMPRATURE SENSOR
+void condition2a(unsigned char var)	//CONDITIONS FOR TEMPRATURE SENSOR
 {
 	float g, h, tenth;
-	g = (5.0 / 256) *
-		var;	//PRESSURE FORMULA
+	g = (5.0 / 256) * var;	//PRESSURE FORMULA
 	h = ((g / 5.0) + 0.09) / 0.009 - 1;	//FORMULA FOR TEMPRATURE SENSOR
 	tenth = h / 10;
 	if (tenth >= 4 && tenth < 5)	//IF PRESSURE IS below 50 PASCAL ROTATE STEPPER MOTOR 0 DEGREE CONDITION
 	{
-		winding1 = 1;
-		winding2 = 0;
-		winding3 = 0;
-		winding4 = 1;
+		WINDING1 = 1;
+		WINDING2 = 0;
+		WINDING3 = 0;
+		WINDING4 = 1;
 	}
 
 	if (tenth >= 5 && tenth < 6)	//IF PRESSURE IS ABOVE 50 PASCAL ROTATE STEPPER MOTOR 45 DEGREE CONDITION
 	{
-		winding1 = 0;
-		winding2 = 0;
-		winding3 = 0;
-		winding4 = 1;
+		WINDING1 = 0;
+		WINDING2 = 0;
+		WINDING3 = 0;
+		WINDING4 = 1;
 	}
 
 	if (tenth >= 6 && tenth < 7)	//IF PRESSURE IS ABOVE 60 PASCAL ROTATE STEPPER MOTOR 45 DEGREE CONDITION
 	{
-		winding1 = 0;
-		winding2 = 0;
-		winding3 = 1;
-		winding4 = 1;
+		WINDING1 = 0;
+		WINDING2 = 0;
+		WINDING3 = 1;
+		WINDING4 = 1;
 	}
 
 	if (tenth >= 7 && tenth < 8)	//IF PRESSURE IS ABOVE 70 PASCAL ROTATE STEPPER MOTOR 135 DEGREE CONDITION
 	{
-		winding1 = 0;
-		winding2 = 0;
-		winding3 = 1;
-		winding4 = 0;
+		WINDING1 = 0;
+		WINDING2 = 0;
+		WINDING3 = 1;
+		WINDING4 = 0;
 	}
 
 	if (tenth >= 8 && tenth < 9)	//IF PRESSURE IS ABOVE 80 PASCAL ROTATE STEPPER MOTOR 180 DEGREE CONDITION
 	{
-		winding1 = 0;
-		winding2 = 1;
-		winding3 = 1;
-		winding4 = 0;
+		WINDING1 = 0;
+		WINDING2 = 1;
+		WINDING3 = 1;
+		WINDING4 = 0;
 	}
 }
 
@@ -254,16 +217,16 @@ void main()	//MAIN FUNCTION
 {
 	//DECLARING VARIABLE
 	TimerDelay();	//TIMER DELAY
-	INTR = 1;	//INITIALIING ALL VALUES
-	rd = 0;
-	wr = 0;
-	al = 0;
+	INTR_PIN = 1;	//INITIALIING ALL VALUES
+	RD = 0;
+	WR = 0;
+	AL = 0;
 	TMOD = 0x21;	//TIMER1 IN MODE 2(8 BIT AUTORELOAD) AND TIMER 1 IN MODE 1(16BIT)
 	TH1 = 0xFD;	//BAUD RATE OF 9600  
 	SCON = 0x50;	//SCON REGISTER WITH MODE 2(8 DATA BITS AND 2 STOP AND START BIT)
 	IE = 0x90;
 	TR1 = 1;	//STARTING TIMER 1
 
-	condition2a(adc2());
-	condition3a(adc3());
+	condition2a(read_adc(1));
+	condition3a(read_adc(2));
 }
