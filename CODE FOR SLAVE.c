@@ -1,26 +1,25 @@
-// NOTE: 'reg51.h' is required for 8051 microcontroller development. If you see linter errors about this file, they can be ignored if you are not compiling for 8051 hardware.
+#ifdef __C51__
 #include <reg51.h>
-	//ACCEPTING DATA FROM ADC808 THROUGH PORT P1
+#else
+// Minimal stubs for non-embedded environments
+unsigned char P1, P2, P3;
+unsigned char SBUF, TI, RI, TR0, TF0, TMOD, TH1, SCON, TR1, TL0, TH0, IE;
+unsigned char P2_0, P2_1, P2_2, P2_3, P2_4, P2_5, P2_6;
+unsigned char P3_2, P3_4, P3_5, P3_6, P3_7;
 #define OUTPUT_PORT P1
-//CHANNEL SELECTING PINS OF ADC808
 #define ADD_A P2_0
 #define ADD_B P2_1
 #define ADD_C P2_2
-//CHANNEL ENABLING PIN OF ADC808
 #define AL P2_3
-//READING CONVERTING DATA FROM ANALOG TO DIGITAL OF ADC808
 #define RD P2_4
-//START CONVERTING DATA OF ADC808
 #define WR P2_5
-//WAITING FOR CONVERTED DATA TO FINISH PIN
 #define INTR_PIN P2_6
-//PIN FOR STEPPER MOTOR
 #define WINDING1 P3_4
 #define WINDING2 P3_5
 #define WINDING3 P3_6
 #define WINDING4 P3_7
-//PIN FOR MOTOR
 #define MOTOR P3_2
+#endif
 // UART Communication Constants
 #define VOLTAGE_CMD 'V'
 #define PRESSURE_CMD 'P'
